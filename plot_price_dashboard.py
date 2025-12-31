@@ -1,6 +1,5 @@
 import pandas as pd
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import os
 
 file_name = "price_history.csv"
@@ -14,19 +13,14 @@ df = pd.read_csv(file_name)
 df["date"] = pd.to_datetime(df["date"])
 df["price"] = df["price"].str.replace("Rs.", "").str.replace(",", "").astype(float)
 
-# Get unique books
+# Unique books
 books = df["book"].unique()
 
-# Create subplots: one row per book
-fig = make_subplots(
-    rows=len(books), cols=1,
-    shared_xaxes=False,
-    subplot_titles=books,
-    vertical_spacing=0.05
-)
+# Create figure
+fig = go.Figure()
 
-# Add a line for each book
-for i, book in enumerate(books, start=1):
+# Add a trace for each book (initially visible=False except the first)
+for i, book in enumerate(books):
     df_book = df[df["book"] == book].sort_values("date")
     fig.add_trace(
         go.Scatter(
@@ -34,24 +28,43 @@ for i, book in enumerate(books, start=1):
             y=df_book["price"],
             mode="lines+markers",
             name=book,
-            hovertemplate="%{x|%b %d, %Y}<br>Price: Rs.%{y}<extra></extra>"
-        ),
-        row=i, col=1
+            hovertemplate="%{x|%b %d, %Y}<br>Price: Rs.%{y}<extra></extra>",
+            visible=(i == 0)  # Only first book visible initially
+        )
     )
 
-# Layout
+# Create dropdown buttons
+buttons = []
+for i, book in enumerate(books):
+    visibility = [False] * len(books)
+    visibility[i] = True
+    buttons.append(
+        dict(
+            label=book,
+            method="update",
+            args=[{"visible": visibility},
+                  {"title": f"Price History: {book}"}]
+        )
+    )
+
 fig.update_layout(
-    height=300 * len(books),  # Adjust height for number of books
-    title_text="Book Price History Dashboard",
-    showlegend=False,
-    template="plotly_white"
+    updatemenus=[dict(
+        active=0,
+        buttons=buttons,
+        x=0.05,
+        y=1.15,
+        xanchor="left",
+        yanchor="top"
+    )],
+    title=f"Price History: {books[0]}",
+    xaxis=dict(tickformat="%b\n%Y"),
+    yaxis=dict(title="Price (Rs.)"),
+    hovermode="closest",
+    template="plotly_white",
+    width=1200,
+    height=700
 )
 
-# Update x-axes to monthly ticks
-for i in range(1, len(books)+1):
-    fig.update_xaxes(tickformat="%b\n%Y", dtick="M1", row=i, col=1)
-    fig.update_yaxes(title_text="Price (Rs.)", row=i, col=1)
-
-# Save dashboard
+# Save HTML dashboard
 fig.write_html(dashboard_file)
 print(f"✅ Dashboard saved: {dashboard_file}")
