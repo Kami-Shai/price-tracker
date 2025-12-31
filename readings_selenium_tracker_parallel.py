@@ -14,7 +14,7 @@ import time
 books = {
     "Superman: The Last Days of Lex Luthor": "https://www.readings.com.pk/book/1890067",
     "Thor By Jason Aaron Omnibus (Volume 1)": "https://readings.com.pk/book/1646684",
-    "Thor By Jason Aaron Omnibus (Volume 2)": "https://readings.com.pk/book/1646685?srsltid=...",
+    "Thor By Jason Aaron Omnibus (Volume 2)": "https://readings.com.pk/book/1646685",
     "Wolverine By Jason Aaron Omnibus Vol. 1 David Finch Cover [New Printing]": "https://readings.com.pk/book/1890468",
     "Wolverine Goes To Hell Omnibus Jae Lee Cover [New Printing]": "https://readings.com.pk/book/1890517",
     "Thor By Straczynski & Gillen Omnibus": "https://www.readings.com.pk/book/1755329",
@@ -45,7 +45,7 @@ books = {
     "Batman: Omnibus (Volume 1)": "https://www.readings.com.pk/book/1489875",
     "Batman By Jeph Loeb & Tim Sale Omnibus": "https://www.readings.com.pk/book/1758865",
     "Batman: Hush 20th Anniversary Edition (Volume 58)": "https://www.readings.com.pk/book/1565542",
-    "Absolute Justice League: The World’S Greatest Super‑Heroes By Alex Ross & Paul Dini (New Edition)": "https://www.readings.com.pk/book/1759085",
+    "Absolute Justice League: The World'S Greatest Super‑Heroes By Alex Ross & Paul Dini (New Edition)": "https://www.readings.com.pk/book/1759085",
     "Absolute DC: The New Frontier (2025 Edition)": "https://www.readings.com.pk/book/1890113",
     "Superman By Kurt Busiek Book One": "https://www.readings.com.pk/book/1758974",
     "Superman By Kurt Busiek Book Two": "https://www.readings.com.pk/book/1890061",
@@ -71,6 +71,8 @@ options.add_argument("--headless")
 options.add_argument("--no-sandbox")
 options.add_argument("--disable-dev-shm-usage")
 options.add_argument("--window-size=1920,1080")
+options.add_argument("--disable-blink-features=AutomationControlled")
+options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
 driver = webdriver.Chrome(
     service=Service(ChromeDriverManager().install()),
@@ -86,6 +88,7 @@ for idx, (name, url) in enumerate(books.items()):
     else:
         driver.execute_script(f"window.open('{url}');")
         tabs.append(driver.window_handles[-1])
+    time.sleep(0.5)  # Small delay between tab opens
 
 # ----------------- SCRAPE WITH RETRIES -----------------
 for tab, (name, _) in zip(tabs, books.items()):
@@ -96,13 +99,13 @@ for tab, (name, _) in zip(tabs, books.items()):
             price_elem = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "span.sale-price"))
             )
-            price = price_elem.text.strip().replace("\n", "")
+            price = price_elem.text.strip().replace("\n", " ")
             print(f"✔ {name}: {price}")
             break
         except Exception as e:
             print(f"⚠ {name}: attempt {attempt} failed.")
             if attempt == MAX_RETRIES:
-                with open(error_log, "a") as f:
+                with open(error_log, "a", encoding="utf-8") as f:
                     f.write(f"{timestamp} | {name} | {str(e)}\n")
             time.sleep(WAIT_TIME)
     rows.append({"date": timestamp, "book": name, "price": price})
@@ -113,7 +116,10 @@ driver.quit()
 df_new = pd.DataFrame(rows)
 if os.path.exists(file_name) and os.path.getsize(file_name) > 0:
     df_existing = pd.read_csv(file_name)
-    df_combined = pd.concat([df_existing, df_new]).drop_duplicates(subset=["book", "date"])
+    df_combined = pd.concat([df_existing, df_new], ignore_index=True)
+    # Remove duplicates keeping the latest entry
+    df_combined = df_combined.drop_duplicates(subset=["book", "date"], keep="last")
+    df_combined = df_combined.sort_values(["book", "date"])
     df_combined.to_csv(file_name, index=False)
 else:
     df_new.to_csv(file_name, index=False)
