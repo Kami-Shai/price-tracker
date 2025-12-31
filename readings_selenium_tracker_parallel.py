@@ -61,6 +61,9 @@ books = {
 file_name = "price_history.csv"
 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
 rows = []
+error_log = "scrape_errors.log"
+MAX_RETRIES = 3
+WAIT_TIME = 2  # seconds between retries
 
 # ----------------- SETUP CHROME -----------------
 options = Options()
@@ -81,21 +84,27 @@ for idx, (name, url) in enumerate(books.items()):
         driver.get(url)
         tabs.append(driver.current_window_handle)
     else:
-        driver.execute_script("window.open('{}');".format(url))
+        driver.execute_script(f"window.open('{url}');")
         tabs.append(driver.window_handles[-1])
 
-# ----------------- SCRAPE -----------------
+# ----------------- SCRAPE WITH RETRIES -----------------
 for tab, (name, _) in zip(tabs, books.items()):
     driver.switch_to.window(tab)
-    try:
-        price_elem = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "span.sale-price"))
-        )
-        price = price_elem.text.strip().replace("\n", "")
-        print(f"✔ {name}: {price}")
-    except Exception as e:
-        price = "Not found"
-        print(f"❌ {name}: Failed to scrape.")
+    price = "Not found"
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            price_elem = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "span.sale-price"))
+            )
+            price = price_elem.text.strip().replace("\n", "")
+            print(f"✔ {name}: {price}")
+            break
+        except Exception as e:
+            print(f"⚠ {name}: attempt {attempt} failed.")
+            if attempt == MAX_RETRIES:
+                with open(error_log, "a") as f:
+                    f.write(f"{timestamp} | {name} | {str(e)}\n")
+            time.sleep(WAIT_TIME)
     rows.append({"date": timestamp, "book": name, "price": price})
 
 driver.quit()
@@ -109,4 +118,6 @@ if os.path.exists(file_name) and os.path.getsize(file_name) > 0:
 else:
     df_new.to_csv(file_name, index=False)
 
-print("\n✅ Done. Prices saved to", file_name)
+print(f"\n✅ Done. Prices saved to {file_name}")
+if os.path.exists(error_log):
+    print(f"⚠ Some errors logged to {error_log}")
