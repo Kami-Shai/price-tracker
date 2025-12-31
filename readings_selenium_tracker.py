@@ -8,6 +8,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime
 import pandas as pd
 import os
+import time
 
 # ----------------- CONFIG -----------------
 books = {
@@ -19,7 +20,9 @@ file_name = "price_history.csv"
 
 # ----------------- SETUP CHROME -----------------
 options = Options()
-options.add_argument("--headless")  # Remove if you want to see the browser
+options.add_argument("--headless")   # Runs without opening a browser window
+options.add_argument("--no-sandbox") # Required in some Linux cloud runners
+options.add_argument("--disable-dev-shm-usage")
 options.add_argument("--window-size=1920,1080")
 
 driver = webdriver.Chrome(
@@ -54,12 +57,8 @@ driver.quit()
 # ----------------- SAVE TO CSV -----------------
 df_new = pd.DataFrame(rows)
 
-if os.path.exists(file_name):
+# Check if CSV exists and is not empty
+if os.path.exists(file_name) and os.path.getsize(file_name) > 0:
     df_existing = pd.read_csv(file_name)
-    # Combine and drop duplicates based on book and date
     df_combined = pd.concat([df_existing, df_new]).drop_duplicates(subset=["book", "date"])
-    df_combined.to_csv(file_name, index=False)
-else:
-    df_new.to_csv(file_name, index=False)
-
-print("\n✅ Done. Prices saved to", file_name)
+    df_combined.to_
