@@ -2,44 +2,56 @@ name: Daily Book Price Tracker
 
 on:
   schedule:
-    - cron: '0 10 * * *'  # Runs daily at 10:00 UTC
-  workflow_dispatch:
+    - cron: '0 10 * * *'  # Runs daily at 10:00 UTC (3:00 PM PKT)
+  workflow_dispatch:  # Allows manual triggering
+
+permissions:
+  contents: write
 
 jobs:
   update_prices:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           persist-credentials: true
-
+          
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
+          cache: 'pip'
+          
+      - name: Install Chrome
+        run: |
+          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install matplotlib  # Needed for charting
-
+          pip install selenium webdriver-manager pandas
+          
       - name: Run price tracker
         run: python readings_selenium_tracker_parallel.py
-
+        continue-on-error: true
+        
       - name: Generate interactive dashboard
         run: python plot_price_dashboard.py
-
+        
+      - name: Configure Git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
       - name: Commit and push updates
-        uses: EndBug/add-and-commit@v9
-        with:
-          author_name: github-actions
-          author_email: github-actions@github.com
-          message: Update book prices & charts [auto]
-          add: |
-            price_history.csv
-            charts/
-          push: true
-          default_author: github_actor
+        run: |
+          git add price_history.csv charts/ scrape_errors.log || true
+          git diff --staged --quiet || git commit -m "📊 Update book prices & dashboard [$(date +'%Y-%m-%d %H:%M UTC')]"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
