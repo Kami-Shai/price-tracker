@@ -1,21 +1,24 @@
 name: Daily Book Price Tracker
 
-# Run on a schedule
 on:
   schedule:
-    - cron: '0 10 * * *'  # Runs every day at 10:00 UTC
-  workflow_dispatch:       # Allows manual run from GitHub
+    - cron: '0 10 * * *'  # daily at 10:00 UTC
+  workflow_dispatch:
 
 jobs:
   update_prices:
     runs-on: ubuntu-latest
 
     steps:
-    # Only one checkout step, with persist-credentials
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
         persist-credentials: true
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
 
     - name: Install dependencies
       run: |
@@ -26,9 +29,9 @@ jobs:
       run: python readings_selenium_tracker.py
 
     - name: Commit updated CSV
-      run: |
-        git config --global user.name "github-actions"
-        git config --global user.email "github-actions@github.com"
-        git add price_history.csv
-        git commit -m "Update book prices [auto]" || echo "No changes to commit"
-        git push
+      uses: EndBug/add-and-commit@v9
+      with:
+        author_name: github-actions
+        author_email: github-actions@github.com
+        message: "Update book prices [auto]"
+        add: "price_history.csv"
