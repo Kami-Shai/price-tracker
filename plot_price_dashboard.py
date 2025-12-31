@@ -13,67 +13,95 @@ df = pd.read_csv(file_name)
 df["date"] = pd.to_datetime(df["date"])
 df["price"] = df["price"].str.replace("Rs.", "").str.replace(",", "").astype(float)
 
-# Unique books
 books = df["book"].unique()
 
-# Create figure
-fig = go.Figure()
-
-# Add a trace for each book (only first visible initially)
-for i, book in enumerate(books):
+# Create traces dictionary
+traces_dict = {}
+for book in books:
     df_book = df[df["book"] == book].sort_values("date")
-    fig.add_trace(
-        go.Scatter(
-            x=df_book["date"],
-            y=df_book["price"],
-            mode="lines+markers",
-            name=book,
-            hovertemplate="%{x|%b %d, %Y}<br>Price: Rs.%{y}<extra></extra>",
-            visible=(i == 0)
-        )
-    )
+    traces_dict[book] = {
+        "x": df_book["date"].tolist(),
+        "y": df_book["price"].tolist()
+    }
 
-# Create dropdown buttons
-buttons = []
-for i, book in enumerate(books):
-    visibility = [False] * len(books)
-    visibility[i] = True
-    buttons.append(dict(
-        label=book,
-        method="update",
-        args=[{"visible": visibility},
-              {"title": f"Price History: {book}"}]
-    ))
+# Generate HTML
+html_lines = [
+    "<!DOCTYPE html>",
+    "<html lang='en'>",
+    "<head>",
+    "  <meta charset='UTF-8'>",
+    "  <meta name='viewport' content='width=device-width, initial-scale=1.0'>",
+    "  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>",
+    "  <title>Book Price Dashboard</title>",
+    "  <style> body{ font-family: Arial; padding: 10px;} </style>",
+    "</head>",
+    "<body>",
+    "  <h2>Book Price History Dashboard</h2>",
+    "  <label for='book_select'>Select Book:</label>",
+    "  <select id='book_select'>"
+]
 
-# Update layout for mobile-friendly dropdown
-fig.update_layout(
-    updatemenus=[dict(
-        active=0,
-        buttons=buttons,
-        x=0,
-        y=1.05,               # inside container, above chart
-        xanchor="left",
-        yanchor="bottom",
-        direction="down",      # dropdown opens downward
-        showactive=True
-    )],
-    margin=dict(t=140, b=80, l=80, r=80),
-    title=f"Price History: {books[0]}",
-    xaxis=dict(tickformat="%b\n%Y"),
-    yaxis=dict(title="Price (Rs.)"),
-    hovermode="closest",
-    template="plotly_white",
-    width=900,
-    height=700
-)
+# Add book options
+for book in books:
+    html_lines.append(f"    <option value='{book}'>{book}</option>")
 
-# Save as responsive HTML
-fig.write_html(
-    dashboard_file,
-    include_plotlyjs='cdn',
-    full_html=True,
-    auto_open=False,
-    config=dict(responsive=True)
-)
+html_lines.extend([
+    "  </select>",
+    "  <div id='chart' style='width:100%;height:600px;'></div>",
+    "  <script>",
+    "    const traces = {"
+])
+
+# Add traces dictionary to JS
+for book in books:
+    html_lines.append(f"      '{book}': {{ x: {traces_dict[book]['x']}, y: {traces_dict[book]['y']} }},")
+html_lines.append("    };")
+
+# JS to plot and update
+html_lines.extend([
+"""
+    const select = document.getElementById('book_select');
+    const chartDiv = document.getElementById('chart');
+
+    function plotBook(book) {
+        const data = [{
+            x: traces[book].x,
+            y: traces[book].y,
+            type: 'scatter',
+            mode: 'lines+markers',
+            marker: {color: '#1f77b4'},
+            hovertemplate: '%{x|%b %d, %Y}<br>Price: Rs.%{y}<extra></extra>'
+        }];
+        const layout = {
+            title: `Price History: ${book}`,
+            margin: {t:80,b:50,l:60,r:50},
+            xaxis: {title: 'Date', tickformat:'%b %Y'},
+            yaxis: {title: 'Price (Rs.)'},
+            hovermode: 'closest',
+            template: 'plotly_white',
+            autosize: true
+        };
+        Plotly.react(chartDiv, data, layout, {responsive:true});
+    }
+
+    // Initial plot
+    plotBook(select.value);
+
+    // Update on selection
+    select.addEventListener('change', () => {
+        plotBook(select.value);
+    });
+"""
+])
+
+html_lines.extend([
+    "  </script>",
+    "</body>",
+    "</html>"
+])
+
+# Write HTML file
+with open(dashboard_file, "w", encoding="utf-8") as f:
+    f.write("\n".join(html_lines))
 
 print(f"✅ Mobile-friendly dashboard saved: {dashboard_file}")
