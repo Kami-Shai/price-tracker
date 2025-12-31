@@ -61,4 +61,8 @@ df_new = pd.DataFrame(rows)
 if os.path.exists(file_name) and os.path.getsize(file_name) > 0:
     df_existing = pd.read_csv(file_name)
     df_combined = pd.concat([df_existing, df_new]).drop_duplicates(subset=["book", "date"])
-    df_combined.to_
+    df_combined.to_csv(file_name, index=False)
+else:
+    df_new.to_csv(file_name, index=False)
+
+print("\n✅ Done. Prices saved to", file_name)
