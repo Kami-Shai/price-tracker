@@ -1,9 +1,10 @@
 name: Daily Book Price Tracker
 
+# Run daily at 10:00 UTC, and allow manual trigger
 on:
   schedule:
-    - cron: '0 10 * * *'  # every day at 10:00 UTC
-  workflow_dispatch:       # manual run
+    - cron: '0 10 * * *'
+  workflow_dispatch:
 
 jobs:
   update_prices:
@@ -18,22 +19,24 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.12
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run parallel price tracker
-        run: python readings_selenium_tracker_optimized.py
+      - name: Run price tracker
+        run: python readings_selenium_tracker_parallel.py
 
-      - name: Commit updated CSV
+      - name: Commit and push updated CSV & error log
         uses: EndBug/add-and-commit@v9
         with:
           author_name: github-actions
           author_email: github-actions@github.com
-          message: "Update book prices [auto]"
-          add: price_history.csv
+          message: Update book prices [auto]
+          add: |
+            price_history.csv
+            scrape_errors.log
           push: true
-          pathspec_error_handling: ignore
+          default_author: github_actor
