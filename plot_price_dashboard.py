@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import os
 
 file_name = "price_history.csv"
@@ -8,18 +9,24 @@ dashboard_file = os.path.join(output_folder, "price_dashboard.html")
 
 os.makedirs(output_folder, exist_ok=True)
 
-# Load data
+# Load CSV
 df = pd.read_csv(file_name)
 df["date"] = pd.to_datetime(df["date"])
 df["price"] = df["price"].str.replace("Rs.", "").str.replace(",", "").astype(float)
 
-# Unique books
+# Get unique books
 books = df["book"].unique()
 
-# Create a figure with one trace per book
-fig = go.Figure()
+# Create subplots: one row per book
+fig = make_subplots(
+    rows=len(books), cols=1,
+    shared_xaxes=False,
+    subplot_titles=books,
+    vertical_spacing=0.05
+)
 
-for book in books:
+# Add a line for each book
+for i, book in enumerate(books, start=1):
     df_book = df[df["book"] == book].sort_values("date")
     fig.add_trace(
         go.Scatter(
@@ -28,25 +35,23 @@ for book in books:
             mode="lines+markers",
             name=book,
             hovertemplate="%{x|%b %d, %Y}<br>Price: Rs.%{y}<extra></extra>"
-        )
+        ),
+        row=i, col=1
     )
 
-# Update layout
+# Layout
 fig.update_layout(
-    title="Book Price History Dashboard",
-    xaxis_title="Date",
-    yaxis_title="Price (Rs.)",
-    xaxis=dict(
-        tickformat="%b\n%Y",
-        dtick="M1"
-    ),
-    hovermode="closest",
-    legend_title="Books",
-    template="plotly_white",
-    width=1200,
-    height=700
+    height=300 * len(books),  # Adjust height for number of books
+    title_text="Book Price History Dashboard",
+    showlegend=False,
+    template="plotly_white"
 )
 
-# Save dashboard as HTML
+# Update x-axes to monthly ticks
+for i in range(1, len(books)+1):
+    fig.update_xaxes(tickformat="%b\n%Y", dtick="M1", row=i, col=1)
+    fig.update_yaxes(title_text="Price (Rs.)", row=i, col=1)
+
+# Save dashboard
 fig.write_html(dashboard_file)
 print(f"✅ Dashboard saved: {dashboard_file}")
