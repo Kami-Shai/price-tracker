@@ -9,7 +9,6 @@ from datetime import datetime
 import pandas as pd
 import os
 import time
-import glob
 
 # ----------------- CONFIG -----------------
 books = {
@@ -60,10 +59,10 @@ books = {
 }
 
 file_name = "price_history.csv"
-log_file = f"scraper_errors.log"
 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+rows = []
 
-# ----------------- SETUP SINGLE CHROME -----------------
+# ----------------- SETUP CHROME -----------------
 options = Options()
 options.add_argument("--headless")
 options.add_argument("--no-sandbox")
@@ -75,12 +74,20 @@ driver = webdriver.Chrome(
     options=options
 )
 
-# ----------------- SCRAPE ALL BOOKS -----------------
-rows = []
-
-for name, url in books.items():
-    try:
+# ----------------- OPEN ALL BOOKS IN TABS -----------------
+tabs = []
+for idx, (name, url) in enumerate(books.items()):
+    if idx == 0:
         driver.get(url)
+        tabs.append(driver.current_window_handle)
+    else:
+        driver.execute_script("window.open('{}');".format(url))
+        tabs.append(driver.window_handles[-1])
+
+# ----------------- SCRAPE -----------------
+for tab, (name, _) in zip(tabs, books.items()):
+    driver.switch_to.window(tab)
+    try:
         price_elem = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "span.sale-price"))
         )
@@ -88,16 +95,13 @@ for name, url in books.items():
         print(f"✔ {name}: {price}")
     except Exception as e:
         price = "Not found"
-        with open(log_file, "a", encoding="utf-8") as f:
-            f.write(f"{timestamp} | {name} | {url} | {e}\n")
-        print(f"❌ {name}: Failed, logged.")
+        print(f"❌ {name}: Failed to scrape.")
     rows.append({"date": timestamp, "book": name, "price": price})
 
 driver.quit()
 
 # ----------------- SAVE CSV -----------------
 df_new = pd.DataFrame(rows)
-
 if os.path.exists(file_name) and os.path.getsize(file_name) > 0:
     df_existing = pd.read_csv(file_name)
     df_combined = pd.concat([df_existing, df_new]).drop_duplicates(subset=["book", "date"])
@@ -106,14 +110,3 @@ else:
     df_new.to_csv(file_name, index=False)
 
 print("\n✅ Done. Prices saved to", file_name)
-print(f"🔹 Any failures logged to {log_file}")
-
-# ----------------- CLEANUP OLD LOGS -----------------
-max_logs = 30
-log_files = sorted(glob.glob("scraper_errors*.log"))
-if len(log_files) > max_logs:
-    for f in log_files[:-max_logs]:
-        try:
-            os.remove(f)
-        except:
-            pass
