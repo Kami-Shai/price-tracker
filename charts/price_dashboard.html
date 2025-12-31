@@ -1,142 +1,1353 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
-  <meta charset='UTF-8'>
-  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
-  <title>Book Price Dashboard</title>
-  <style> body{ font-family: Arial; padding: 10px;} </style>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <script src='https://cdn.plot.ly/plotly-2.27.0.min.js'></script>
+    <title>Book Price Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .controls {
+            padding: 25px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .select-wrapper {
+            position: relative;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .select-wrapper label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.95em;
+        }
+        
+        #book_select {
+            width: 100%;
+            padding: 14px 40px 14px 16px;
+            font-size: 16px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            appearance: none;
+            transition: all 0.3s ease;
+            color: #212529;
+        }
+        
+        #book_select:hover {
+            border-color: #667eea;
+        }
+        
+        #book_select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .select-wrapper::after {
+            content: '▼';
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            color: #667eea;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+        
+        .chart-container {
+            padding: 30px;
+        }
+        
+        #chart {
+            width: 100%;
+            height: 600px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 25px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            color: #212529;
+            font-size: 1.5em;
+            font-weight: 700;
+        }
+        
+        .price-change {
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .price-up {
+            color: #dc3545;
+        }
+        
+        .price-down {
+            color: #28a745;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .header p {
+                font-size: 0.95em;
+            }
+            
+            .controls, .chart-container, .stats {
+                padding: 20px;
+            }
+            
+            #chart {
+                height: 400px;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h2>Book Price History Dashboard</h2>
-  <label for='book_select'>Select Book:</label>
-  <select id='book_select'>
-    <option value='Superman: The Last Days of Lex Luthor'>Superman: The Last Days of Lex Luthor</option>
-    <option value='Thor By Jason Aaron Omnibus (Volume 1)'>Thor By Jason Aaron Omnibus (Volume 1)</option>
-    <option value='Thor By Jason Aaron Omnibus (Volume 2)'>Thor By Jason Aaron Omnibus (Volume 2)</option>
-    <option value='Wolverine By Jason Aaron Omnibus Vol. 1 David Finch Cover [New Printing]'>Wolverine By Jason Aaron Omnibus Vol. 1 David Finch Cover [New Printing]</option>
-    <option value='Wolverine Goes To Hell Omnibus Jae Lee Cover [New Printing]'>Wolverine Goes To Hell Omnibus Jae Lee Cover [New Printing]</option>
-    <option value='Thor By Straczynski & Gillen Omnibus'>Thor By Straczynski & Gillen Omnibus</option>
-    <option value='Loki: God Of Stories Omnibus'>Loki: God Of Stories Omnibus</option>
-    <option value='Lucifer Omnibus Vol. 1 (The Sandman Universe Classics)'>Lucifer Omnibus Vol. 1 (The Sandman Universe Classics)</option>
-    <option value='Lucifer Omnibus Vol. 2 (The Sandman Universe Classics)'>Lucifer Omnibus Vol. 2 (The Sandman Universe Classics)</option>
-    <option value='The Planetary Omnibus'>The Planetary Omnibus</option>
-    <option value='Death: The Deluxe Edition (2022 Edition)'>Death: The Deluxe Edition (2022 Edition)</option>
-    <option value='Batman By Paul Dini Omnibus (New Edition)'>Batman By Paul Dini Omnibus (New Edition)</option>
-    <option value='Absolute Superman For All Seasons'>Absolute Superman For All Seasons</option>
-    <option value='Gotham Central Omnibus (2022 Edition)'>Gotham Central Omnibus (2022 Edition)</option>
-    <option value='The Animal Man Omnibus (2022 Edition)'>The Animal Man Omnibus (2022 Edition)</option>
-    <option value='Absolute Kingdom Come (New Edition)'>Absolute Kingdom Come (New Edition)</option>
-    <option value='Alice In Borderland (Volume 1)'>Alice In Borderland (Volume 1)</option>
-    <option value='Alice In Borderland (Volume 2)'>Alice In Borderland (Volume 2)</option>
-    <option value='Alice In Borderland (Volume 3)'>Alice In Borderland (Volume 3)</option>
-    <option value='Alice In Borderland (Volume 4)'>Alice In Borderland (Volume 4)</option>
-    <option value='Alice In Borderland (Volume 5)'>Alice In Borderland (Volume 5)</option>
-    <option value='Alice In Borderland, Vol. 6'>Alice In Borderland, Vol. 6</option>
-    <option value='Alice In Borderland, Vol. 7'>Alice In Borderland, Vol. 7</option>
-    <option value='Alice In Borderland, Vol. 8'>Alice In Borderland, Vol. 8</option>
-    <option value='Alice In Borderland, Vol. 9'>Alice In Borderland, Vol. 9</option>
-    <option value='Noel: Batman (Volume 1)'>Noel: Batman (Volume 1)</option>
-    <option value='The Count Of Monte Cristo (Penguin Clothbound Classics)'>The Count Of Monte Cristo (Penguin Clothbound Classics)</option>
-    <option value='Superior Spider-Man Omnibus Vol. 1'>Superior Spider-Man Omnibus Vol. 1</option>
-    <option value='Doctor Strange By Jed Mackay Omnibus'>Doctor Strange By Jed Mackay Omnibus</option>
-    <option value='Hawkeye By Fraction & Aja Omnibus [New Printing]'>Hawkeye By Fraction & Aja Omnibus [New Printing]</option>
-    <option value='Batman: Omnibus (Volume 1)'>Batman: Omnibus (Volume 1)</option>
-    <option value='Batman By Jeph Loeb & Tim Sale Omnibus'>Batman By Jeph Loeb & Tim Sale Omnibus</option>
-    <option value='Batman: Hush 20th Anniversary Edition (Volume 58)'>Batman: Hush 20th Anniversary Edition (Volume 58)</option>
-    <option value='Absolute Justice League: The World’S Greatest Super‑Heroes By Alex Ross & Paul Dini (New Edition)'>Absolute Justice League: The World’S Greatest Super‑Heroes By Alex Ross & Paul Dini (New Edition)</option>
-    <option value='Absolute DC: The New Frontier (2025 Edition)'>Absolute DC: The New Frontier (2025 Edition)</option>
-    <option value='Superman By Kurt Busiek Book One'>Superman By Kurt Busiek Book One</option>
-    <option value='Superman By Kurt Busiek Book Two'>Superman By Kurt Busiek Book Two</option>
-    <option value='Superman: Birthright The Deluxe Edition (Volume 1)'>Superman: Birthright The Deluxe Edition (Volume 1)</option>
-    <option value='Vision: The Complete Collection'>Vision: The Complete Collection</option>
-    <option value='Spider-Man By Chip Zdarsky Omnibus'>Spider-Man By Chip Zdarsky Omnibus</option>
-    <option value='The Batman Who Laughs'>The Batman Who Laughs</option>
-    <option value='Superman Smashes The Klan'>Superman Smashes The Klan</option>
-    <option value='Batman By Darwyn Cooke: Absolute Edition'>Batman By Darwyn Cooke: Absolute Edition</option>
-    <option value='Green Lantern: Earth One (Volume 1)'>Green Lantern: Earth One (Volume 1)</option>
-  </select>
-  <div id='chart' style='width:100%;height:600px;'></div>
-  <script>
-    const traces = {
-      'Superman: The Last Days of Lex Luthor': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [5659.0, 5659.0, 5659.0, 5659.0, 5659.0, 5659.0, 5659.0] },
-      'Thor By Jason Aaron Omnibus (Volume 1)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [23771.0, 23771.0, 23771.0, 23771.0, 23771.0, 23771.0, 23771.0] },
-      'Thor By Jason Aaron Omnibus (Volume 2)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [28084.0, 28084.0, 28084.0, 28084.0, 28084.0, 28084.0, 28084.0] },
-      'Wolverine By Jason Aaron Omnibus Vol. 1 David Finch Cover [New Printing]': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [18896.0, 18896.0, 18896.0, 18896.0, 18896.0, 18896.0, 18896.0] },
-      'Wolverine Goes To Hell Omnibus Jae Lee Cover [New Printing]': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [24034.0, 24034.0, 24034.0, 24034.0, 24034.0, 24034.0, 24034.0] },
-      'Thor By Straczynski & Gillen Omnibus': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [24634.0, 24634.0, 24634.0, 24634.0, 24634.0, 24634.0, 24634.0] },
-      'Loki: God Of Stories Omnibus': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [23996.0, 23996.0, 23996.0, 23996.0, 23996.0, 23996.0, 23996.0] },
-      'Lucifer Omnibus Vol. 1 (The Sandman Universe Classics)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [23471.0, 23471.0, 23471.0, 23471.0, 23471.0, 23471.0, 23471.0] },
-      'Lucifer Omnibus Vol. 2 (The Sandman Universe Classics)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [23359.0, 23359.0, 23359.0, 23359.0, 23359.0, 23359.0, 23359.0] },
-      'The Planetary Omnibus': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [12071.0, 12071.0, 12071.0, 12071.0, 12071.0, 12071.0, 12071.0] },
-      'Death: The Deluxe Edition (2022 Edition)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [6146.0, 6146.0, 6146.0, 6146.0, 6146.0, 6146.0, 6146.0] },
-      'Batman By Paul Dini Omnibus (New Edition)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [22909.0, 22909.0, 22909.0, 22909.0, 22909.0, 22909.0, 22909.0] },
-      'Absolute Superman For All Seasons': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [18671.0, 18671.0, 18671.0, 18671.0, 18671.0, 18671.0, 18671.0] },
-      'Gotham Central Omnibus (2022 Edition)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [18784.0, 18784.0, 18784.0, 18784.0, 18784.0, 18784.0, 18784.0] },
-      'The Animal Man Omnibus (2022 Edition)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [18071.0, 18071.0, 18071.0, 18071.0, 18071.0, 18071.0, 18071.0] },
-      'Absolute Kingdom Come (New Edition)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [19421.0, 19421.0, 19421.0, 19421.0, 19421.0, 19421.0, 19421.0] },
-      'Alice In Borderland (Volume 1)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [4459.0, 4459.0, 4459.0, 4459.0, 4459.0, 4459.0, 4459.0] },
-      'Alice In Borderland (Volume 2)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [3634.0, 3634.0, 3634.0, 3634.0, 3634.0, 3634.0, 3634.0] },
-      'Alice In Borderland (Volume 3)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [3671.0, 3671.0, 3671.0, 3671.0, 3671.0, 3671.0, 3671.0] },
-      'Alice In Borderland (Volume 4)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [3371.0, 3371.0, 3371.0, 3371.0, 3371.0, 3371.0, 3371.0] },
-      'Alice In Borderland (Volume 5)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [3484.0, 3484.0, 3484.0, 3484.0, 3484.0, 3484.0, 3484.0] },
-      'Alice In Borderland, Vol. 6': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [3859.0, 3859.0, 3859.0, 3859.0, 3859.0, 3859.0, 3859.0] },
-      'Alice In Borderland, Vol. 7': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [3821.0, 3821.0, 3821.0, 3821.0, 3821.0, 3821.0, 3821.0] },
-      'Alice In Borderland, Vol. 8': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [3859.0, 3859.0, 3859.0, 3859.0, 3859.0, 3859.0, 3859.0] },
-      'Alice In Borderland, Vol. 9': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [4571.0, 4571.0, 4571.0, 4571.0, 4571.0, 4571.0, 4571.0] },
-      'Noel: Batman (Volume 1)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [3971.0, 3971.0, 3971.0, 3971.0, 3971.0, 3971.0, 3971.0] },
-      'The Count Of Monte Cristo (Penguin Clothbound Classics)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [3259.0, 3259.0, 3259.0, 3259.0, 3259.0, 3259.0, 3259.0] },
-      'Superior Spider-Man Omnibus Vol. 1': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [23884.0, 23884.0, 23884.0, 23884.0, 23884.0, 23884.0, 23884.0] },
-      'Doctor Strange By Jed Mackay Omnibus': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [19609.0, 19609.0, 19609.0, 19609.0, 19609.0, 19609.0, 19609.0] },
-      'Hawkeye By Fraction & Aja Omnibus [New Printing]': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [18409.0, 18409.0, 18409.0, 18409.0, 18409.0, 18409.0, 18409.0] },
-      'Batman: Omnibus (Volume 1)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [25121.0, 25121.0, 25121.0, 25121.0, 25121.0, 25121.0, 25121.0] },
-      'Batman By Jeph Loeb & Tim Sale Omnibus': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [23884.0, 23884.0, 23884.0, 23884.0, 23884.0, 23884.0, 23884.0] },
-      'Batman: Hush 20th Anniversary Edition (Volume 58)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [9371.0, 9371.0, 9371.0, 9371.0, 9371.0, 9371.0, 9371.0] },
-      'Absolute Justice League: The World’S Greatest Super‑Heroes By Alex Ross & Paul Dini (New Edition)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [19234.0, 19234.0, 19234.0, 19234.0, 19234.0, 19234.0, 19234.0] },
-      'Absolute DC: The New Frontier (2025 Edition)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [23434.0, 23434.0, 23434.0, 23434.0, 23434.0, 23434.0, 23434.0] },
-      'Superman By Kurt Busiek Book One': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [9521.0, 9521.0, 9521.0, 9521.0, 9521.0, 9521.0, 9521.0] },
-      'Superman By Kurt Busiek Book Two': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [9484.0, 9484.0, 9484.0, 9484.0, 9484.0, 9484.0, 9484.0] },
-      'Superman: Birthright The Deluxe Edition (Volume 1)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [9259.0, 9259.0, 9259.0, 9259.0, 9259.0, 9259.0, 9259.0] },
-      'Vision: The Complete Collection': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [5584.0, 5584.0, 5584.0, 5584.0, 5584.0, 5584.0, 5584.0] },
-      'Spider-Man By Chip Zdarsky Omnibus': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [23846.0, 23846.0, 23846.0, 23846.0, 23846.0, 23846.0, 23846.0] },
-      'The Batman Who Laughs': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [5696.0, 5696.0, 5696.0, 5696.0, 5696.0, 5696.0, 5696.0] },
-      'Superman Smashes The Klan': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [3221.0, 3221.0, 3221.0, 3221.0, 3221.0, 3221.0, 3221.0] },
-      'Batman By Darwyn Cooke: Absolute Edition': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [16496.0, 16496.0, 16496.0, 16496.0, 16496.0, 16496.0, 16496.0] },
-      'Green Lantern: Earth One (Volume 1)': { x: ["2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31", "2025-12-31"], y: [4721.0, 4721.0, 4721.0, 4721.0, 4721.0, 4721.0, 4721.0] },
-    };
-
-    const select = document.getElementById('book_select');
-    const chartDiv = document.getElementById('chart');
-
-    function plotBook(book) {
-        const data = [{
-            x: traces[book].x,
-            y: traces[book].y,
-            type: 'scatter',
-            mode: 'lines+markers',
-            marker: {color: '#1f77b4'},
-            hovertemplate: '%{x}<br>Price: Rs.%{y}<extra></extra>'
-        }];
-        const layout = {
-            title: `Price History: ${book}`,
-            margin: {t:80,b:50,l:60,r:50},
-            xaxis: {title: 'Date', tickformat:'%b %Y'},
-            yaxis: {title: 'Price (Rs.)'},
-            hovermode: 'closest',
-            template: 'plotly_white',
-            autosize: true
-        };
-        Plotly.react(chartDiv, data, layout, {responsive:true});
-    }
-
-    // Initial plot
-    plotBook(select.value);
-
-    // Update on selection
-    select.addEventListener('change', () => {
+    <div class='container'>
+        <div class='header'>
+            <h1>📚 Book Price Tracker</h1>
+            <p>Track price history for your favorite comic books and novels</p>
+        </div>
+        
+        <div class='controls'>
+            <div class='select-wrapper'>
+                <label for='book_select'>Select a book to view price history:</label>
+                <select id='book_select'>
+                    <option value='Absolute DC: The New Frontier (2025 Edition)'>Absolute DC: The New Frontier (2025 Edition)</option>
+                    <option value='Absolute Justice League: The World'S Greatest Super‑Heroes By Alex Ross & Paul Dini (New Edition)'>Absolute Justice League: The World'S Greatest Super‑Heroes By Alex Ross & Paul Dini (New Edition)</option>
+                    <option value='Absolute Justice League: The World’S Greatest Super‑Heroes By Alex Ross & Paul Dini (New Edition)'>Absolute Justice League: The World’S Greatest Super‑Heroes By Alex Ross & Paul Dini (New Edition)</option>
+                    <option value='Absolute Kingdom Come (New Edition)'>Absolute Kingdom Come (New Edition)</option>
+                    <option value='Absolute Superman For All Seasons'>Absolute Superman For All Seasons</option>
+                    <option value='Alice In Borderland (Volume 1)'>Alice In Borderland (Volume 1)</option>
+                    <option value='Alice In Borderland (Volume 2)'>Alice In Borderland (Volume 2)</option>
+                    <option value='Alice In Borderland (Volume 3)'>Alice In Borderland (Volume 3)</option>
+                    <option value='Alice In Borderland (Volume 4)'>Alice In Borderland (Volume 4)</option>
+                    <option value='Alice In Borderland (Volume 5)'>Alice In Borderland (Volume 5)</option>
+                    <option value='Alice In Borderland, Vol. 6'>Alice In Borderland, Vol. 6</option>
+                    <option value='Alice In Borderland, Vol. 7'>Alice In Borderland, Vol. 7</option>
+                    <option value='Alice In Borderland, Vol. 8'>Alice In Borderland, Vol. 8</option>
+                    <option value='Alice In Borderland, Vol. 9'>Alice In Borderland, Vol. 9</option>
+                    <option value='Batman By Darwyn Cooke: Absolute Edition'>Batman By Darwyn Cooke: Absolute Edition</option>
+                    <option value='Batman By Jeph Loeb & Tim Sale Omnibus'>Batman By Jeph Loeb & Tim Sale Omnibus</option>
+                    <option value='Batman By Paul Dini Omnibus (New Edition)'>Batman By Paul Dini Omnibus (New Edition)</option>
+                    <option value='Batman: Hush 20th Anniversary Edition (Volume 58)'>Batman: Hush 20th Anniversary Edition (Volume 58)</option>
+                    <option value='Batman: Omnibus (Volume 1)'>Batman: Omnibus (Volume 1)</option>
+                    <option value='Death: The Deluxe Edition (2022 Edition)'>Death: The Deluxe Edition (2022 Edition)</option>
+                    <option value='Doctor Strange By Jed Mackay Omnibus'>Doctor Strange By Jed Mackay Omnibus</option>
+                    <option value='Gotham Central Omnibus (2022 Edition)'>Gotham Central Omnibus (2022 Edition)</option>
+                    <option value='Green Lantern: Earth One (Volume 1)'>Green Lantern: Earth One (Volume 1)</option>
+                    <option value='Hawkeye By Fraction & Aja Omnibus [New Printing]'>Hawkeye By Fraction & Aja Omnibus [New Printing]</option>
+                    <option value='Loki: God Of Stories Omnibus'>Loki: God Of Stories Omnibus</option>
+                    <option value='Lucifer Omnibus Vol. 1 (The Sandman Universe Classics)'>Lucifer Omnibus Vol. 1 (The Sandman Universe Classics)</option>
+                    <option value='Lucifer Omnibus Vol. 2 (The Sandman Universe Classics)'>Lucifer Omnibus Vol. 2 (The Sandman Universe Classics)</option>
+                    <option value='Noel: Batman (Volume 1)'>Noel: Batman (Volume 1)</option>
+                    <option value='Spider-Man By Chip Zdarsky Omnibus'>Spider-Man By Chip Zdarsky Omnibus</option>
+                    <option value='Superior Spider-Man Omnibus Vol. 1'>Superior Spider-Man Omnibus Vol. 1</option>
+                    <option value='Superman By Kurt Busiek Book One'>Superman By Kurt Busiek Book One</option>
+                    <option value='Superman By Kurt Busiek Book Two'>Superman By Kurt Busiek Book Two</option>
+                    <option value='Superman Smashes The Klan'>Superman Smashes The Klan</option>
+                    <option value='Superman: Birthright The Deluxe Edition (Volume 1)'>Superman: Birthright The Deluxe Edition (Volume 1)</option>
+                    <option value='Superman: The Last Days of Lex Luthor'>Superman: The Last Days of Lex Luthor</option>
+                    <option value='The Animal Man Omnibus (2022 Edition)'>The Animal Man Omnibus (2022 Edition)</option>
+                    <option value='The Batman Who Laughs'>The Batman Who Laughs</option>
+                    <option value='The Count Of Monte Cristo (Penguin Clothbound Classics)'>The Count Of Monte Cristo (Penguin Clothbound Classics)</option>
+                    <option value='The Planetary Omnibus'>The Planetary Omnibus</option>
+                    <option value='Thor By Jason Aaron Omnibus (Volume 1)'>Thor By Jason Aaron Omnibus (Volume 1)</option>
+                    <option value='Thor By Jason Aaron Omnibus (Volume 2)'>Thor By Jason Aaron Omnibus (Volume 2)</option>
+                    <option value='Thor By Straczynski & Gillen Omnibus'>Thor By Straczynski & Gillen Omnibus</option>
+                    <option value='Vision: The Complete Collection'>Vision: The Complete Collection</option>
+                    <option value='Wolverine By Jason Aaron Omnibus Vol. 1 David Finch Cover [New Printing]'>Wolverine By Jason Aaron Omnibus Vol. 1 David Finch Cover [New Printing]</option>
+                    <option value='Wolverine Goes To Hell Omnibus Jae Lee Cover [New Printing]'>Wolverine Goes To Hell Omnibus Jae Lee Cover [New Printing]</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class='chart-container'>
+            <div id='chart'></div>
+        </div>
+        
+        <div class='stats'>
+            <div class='stat-card'>
+                <div class='stat-label'>Current Price</div>
+                <div class='stat-value' id='current-price'>-</div>
+            </div>
+            <div class='stat-card'>
+                <div class='stat-label'>Lowest Price</div>
+                <div class='stat-value' id='lowest-price'>-</div>
+            </div>
+            <div class='stat-card'>
+                <div class='stat-label'>Highest Price</div>
+                <div class='stat-value' id='highest-price'>-</div>
+            </div>
+            <div class='stat-card'>
+                <div class='stat-label'>Price Change</div>
+                <div class='stat-value' id='price-change'>-</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const traces = {
+            "Absolute DC: The New Frontier (2025 Edition)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.23434,
+                                    0.23434,
+                                    0.23434,
+                                    0.23434,
+                                    0.23434,
+                                    0.23434,
+                                    0.23434,
+                                    0.23434
+                        ]
+            },
+            "Absolute Justice League: The World'S Greatest Super\u2011Heroes By Alex Ross & Paul Dini (New Edition)": {
+                        "x": [
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.19234
+                        ]
+            },
+            "Absolute Justice League: The World\u2019S Greatest Super\u2011Heroes By Alex Ross & Paul Dini (New Edition)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.19234,
+                                    0.19234,
+                                    0.19234,
+                                    0.19234,
+                                    0.19234,
+                                    0.19234,
+                                    0.19234
+                        ]
+            },
+            "Absolute Kingdom Come (New Edition)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.19421,
+                                    0.19421,
+                                    0.19421,
+                                    0.19421,
+                                    0.19421,
+                                    0.19421,
+                                    0.19421,
+                                    0.19421
+                        ]
+            },
+            "Absolute Superman For All Seasons": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.18671,
+                                    0.18671,
+                                    0.18671,
+                                    0.18671,
+                                    0.18671,
+                                    0.18671,
+                                    0.18671,
+                                    0.18671
+                        ]
+            },
+            "Alice In Borderland (Volume 1)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.4459,
+                                    0.4459,
+                                    0.4459,
+                                    0.4459,
+                                    0.4459,
+                                    0.4459,
+                                    0.4459,
+                                    0.4459
+                        ]
+            },
+            "Alice In Borderland (Volume 2)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.3634,
+                                    0.3634,
+                                    0.3634,
+                                    0.3634,
+                                    0.3634,
+                                    0.3634,
+                                    0.3634,
+                                    0.3634
+                        ]
+            },
+            "Alice In Borderland (Volume 3)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.3671,
+                                    0.3671,
+                                    0.3671,
+                                    0.3671,
+                                    0.3671,
+                                    0.3671,
+                                    0.3671,
+                                    0.3671
+                        ]
+            },
+            "Alice In Borderland (Volume 4)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.3371,
+                                    0.3371,
+                                    0.3371,
+                                    0.3371,
+                                    0.3371,
+                                    0.3371,
+                                    0.3371,
+                                    0.3371
+                        ]
+            },
+            "Alice In Borderland (Volume 5)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.3484,
+                                    0.3484,
+                                    0.3484,
+                                    0.3484,
+                                    0.3484,
+                                    0.3484,
+                                    0.3484,
+                                    0.3484
+                        ]
+            },
+            "Alice In Borderland, Vol. 6": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.3859,
+                                    0.3859,
+                                    0.3859,
+                                    0.3859,
+                                    0.3859,
+                                    0.3859,
+                                    0.3859,
+                                    0.3859
+                        ]
+            },
+            "Alice In Borderland, Vol. 7": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.3821,
+                                    0.3821,
+                                    0.3821,
+                                    0.3821,
+                                    0.3821,
+                                    0.3821,
+                                    0.3821,
+                                    0.3821
+                        ]
+            },
+            "Alice In Borderland, Vol. 8": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.3859,
+                                    0.3859,
+                                    0.3859,
+                                    0.3859,
+                                    0.3859,
+                                    0.3859,
+                                    0.3859,
+                                    0.3859
+                        ]
+            },
+            "Alice In Borderland, Vol. 9": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.4571,
+                                    0.4571,
+                                    0.4571,
+                                    0.4571,
+                                    0.4571,
+                                    0.4571,
+                                    0.4571,
+                                    0.4571
+                        ]
+            },
+            "Batman By Darwyn Cooke: Absolute Edition": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.16496,
+                                    0.16496,
+                                    0.16496,
+                                    0.16496,
+                                    0.16496,
+                                    0.16496,
+                                    0.16496,
+                                    0.16496
+                        ]
+            },
+            "Batman By Jeph Loeb & Tim Sale Omnibus": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.23884,
+                                    0.23884,
+                                    0.23884,
+                                    0.23884,
+                                    0.23884,
+                                    0.23884,
+                                    0.23884,
+                                    0.23884
+                        ]
+            },
+            "Batman By Paul Dini Omnibus (New Edition)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.22909,
+                                    0.22909,
+                                    0.22909,
+                                    0.22909,
+                                    0.22909,
+                                    0.22909,
+                                    0.22909,
+                                    0.22909
+                        ]
+            },
+            "Batman: Hush 20th Anniversary Edition (Volume 58)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.9371,
+                                    0.9371,
+                                    0.9371,
+                                    0.9371,
+                                    0.9371,
+                                    0.9371,
+                                    0.9371,
+                                    0.9371
+                        ]
+            },
+            "Batman: Omnibus (Volume 1)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.25121,
+                                    0.25121,
+                                    0.25121,
+                                    0.25121,
+                                    0.25121,
+                                    0.25121,
+                                    0.25121,
+                                    0.25121
+                        ]
+            },
+            "Death: The Deluxe Edition (2022 Edition)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.6146,
+                                    0.6146,
+                                    0.6146,
+                                    0.6146,
+                                    0.6146,
+                                    0.6146,
+                                    0.6146,
+                                    0.6146
+                        ]
+            },
+            "Doctor Strange By Jed Mackay Omnibus": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.19609,
+                                    0.19609,
+                                    0.19609,
+                                    0.19609,
+                                    0.19609,
+                                    0.19609,
+                                    0.19609,
+                                    0.19609
+                        ]
+            },
+            "Gotham Central Omnibus (2022 Edition)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.18784,
+                                    0.18784,
+                                    0.18784,
+                                    0.18784,
+                                    0.18784,
+                                    0.18784,
+                                    0.18784,
+                                    0.18784
+                        ]
+            },
+            "Green Lantern: Earth One (Volume 1)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.4721,
+                                    0.4721,
+                                    0.4721,
+                                    0.4721,
+                                    0.4721,
+                                    0.4721,
+                                    0.4721,
+                                    0.4721
+                        ]
+            },
+            "Hawkeye By Fraction & Aja Omnibus [New Printing]": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.18409,
+                                    0.18409,
+                                    0.18409,
+                                    0.18409,
+                                    0.18409,
+                                    0.18409,
+                                    0.18409,
+                                    0.18409
+                        ]
+            },
+            "Loki: God Of Stories Omnibus": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.23996,
+                                    0.23996,
+                                    0.23996,
+                                    0.23996,
+                                    0.23996,
+                                    0.23996,
+                                    0.23996,
+                                    0.23996
+                        ]
+            },
+            "Lucifer Omnibus Vol. 1 (The Sandman Universe Classics)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.23471,
+                                    0.23471,
+                                    0.23471,
+                                    0.23471,
+                                    0.23471,
+                                    0.23471,
+                                    0.23471,
+                                    0.23471
+                        ]
+            },
+            "Lucifer Omnibus Vol. 2 (The Sandman Universe Classics)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.23359,
+                                    0.23359,
+                                    0.23359,
+                                    0.23359,
+                                    0.23359,
+                                    0.23359,
+                                    0.23359,
+                                    0.23359
+                        ]
+            },
+            "Noel: Batman (Volume 1)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.3971,
+                                    0.3971,
+                                    0.3971,
+                                    0.3971,
+                                    0.3971,
+                                    0.3971,
+                                    0.3971,
+                                    0.3971
+                        ]
+            },
+            "Spider-Man By Chip Zdarsky Omnibus": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.23846,
+                                    0.23846,
+                                    0.23846,
+                                    0.23846,
+                                    0.23846,
+                                    0.23846,
+                                    0.23846,
+                                    0.23846
+                        ]
+            },
+            "Superior Spider-Man Omnibus Vol. 1": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.23884,
+                                    0.23884,
+                                    0.23884,
+                                    0.23884,
+                                    0.23884,
+                                    0.23884,
+                                    0.23884,
+                                    0.23884
+                        ]
+            },
+            "Superman By Kurt Busiek Book One": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.9521,
+                                    0.9521,
+                                    0.9521,
+                                    0.9521,
+                                    0.9521,
+                                    0.9521,
+                                    0.9521,
+                                    0.9521
+                        ]
+            },
+            "Superman By Kurt Busiek Book Two": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.9484,
+                                    0.9484,
+                                    0.9484,
+                                    0.9484,
+                                    0.9484,
+                                    0.9484,
+                                    0.9484,
+                                    0.9484
+                        ]
+            },
+            "Superman Smashes The Klan": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.3221,
+                                    0.3221,
+                                    0.3221,
+                                    0.3221,
+                                    0.3221,
+                                    0.3221,
+                                    0.3221,
+                                    0.3221
+                        ]
+            },
+            "Superman: Birthright The Deluxe Edition (Volume 1)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.9259,
+                                    0.9259,
+                                    0.9259,
+                                    0.9259,
+                                    0.9259,
+                                    0.9259,
+                                    0.9259,
+                                    0.9259
+                        ]
+            },
+            "Superman: The Last Days of Lex Luthor": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.5659,
+                                    0.5659,
+                                    0.5659,
+                                    0.5659,
+                                    0.5659,
+                                    0.5659,
+                                    0.5659,
+                                    0.5659
+                        ]
+            },
+            "The Animal Man Omnibus (2022 Edition)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.18071,
+                                    0.18071,
+                                    0.18071,
+                                    0.18071,
+                                    0.18071,
+                                    0.18071,
+                                    0.18071,
+                                    0.18071
+                        ]
+            },
+            "The Batman Who Laughs": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.5696,
+                                    0.5696,
+                                    0.5696,
+                                    0.5696,
+                                    0.5696,
+                                    0.5696,
+                                    0.5696,
+                                    0.5696
+                        ]
+            },
+            "The Count Of Monte Cristo (Penguin Clothbound Classics)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.3259,
+                                    0.3259,
+                                    0.3259,
+                                    0.3259,
+                                    0.3259,
+                                    0.3259,
+                                    0.3259,
+                                    0.3259
+                        ]
+            },
+            "The Planetary Omnibus": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.12071,
+                                    0.12071,
+                                    0.12071,
+                                    0.12071,
+                                    0.12071,
+                                    0.12071,
+                                    0.12071,
+                                    0.12071
+                        ]
+            },
+            "Thor By Jason Aaron Omnibus (Volume 1)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.23771,
+                                    0.23771,
+                                    0.23771,
+                                    0.23771,
+                                    0.23771,
+                                    0.23771,
+                                    0.23771,
+                                    0.23771
+                        ]
+            },
+            "Thor By Jason Aaron Omnibus (Volume 2)": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.28084,
+                                    0.28084,
+                                    0.28084,
+                                    0.28084,
+                                    0.28084,
+                                    0.28084,
+                                    0.28084,
+                                    0.28084
+                        ]
+            },
+            "Thor By Straczynski & Gillen Omnibus": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.24634,
+                                    0.24634,
+                                    0.24634,
+                                    0.24634,
+                                    0.24634,
+                                    0.24634,
+                                    0.24634,
+                                    0.24634
+                        ]
+            },
+            "Vision: The Complete Collection": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.5584,
+                                    0.5584,
+                                    0.5584,
+                                    0.5584,
+                                    0.5584,
+                                    0.5584,
+                                    0.5584,
+                                    0.5584
+                        ]
+            },
+            "Wolverine By Jason Aaron Omnibus Vol. 1 David Finch Cover [New Printing]": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.18896,
+                                    0.18896,
+                                    0.18896,
+                                    0.18896,
+                                    0.18896,
+                                    0.18896,
+                                    0.18896,
+                                    0.18896
+                        ]
+            },
+            "Wolverine Goes To Hell Omnibus Jae Lee Cover [New Printing]": {
+                        "x": [
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31",
+                                    "2025-12-31"
+                        ],
+                        "y": [
+                                    0.24034,
+                                    0.24034,
+                                    0.24034,
+                                    0.24034,
+                                    0.24034,
+                                    0.24034,
+                                    0.24034,
+                                    0.24034
+                        ]
+            }
+};
+        
+        const select = document.getElementById('book_select');
+        const chartDiv = document.getElementById('chart');
+        
+        function updateStats(book) {
+            const data = traces[book];
+            if (!data || !data.y || data.y.length === 0) return;
+            
+            const prices = data.y;
+            const current = prices[prices.length - 1];
+            const lowest = Math.min(...prices);
+            const highest = Math.max(...prices);
+            const first = prices[0];
+            const change = current - first;
+            const changePercent = ((change / first) * 100).toFixed(1);
+            
+            document.getElementById('current-price').textContent = `Rs. ${current.toLocaleString()}`;
+            document.getElementById('lowest-price').textContent = `Rs. ${lowest.toLocaleString()}`;
+            document.getElementById('highest-price').textContent = `Rs. ${highest.toLocaleString()}`;
+            
+            const changeEl = document.getElementById('price-change');
+            const changeClass = change > 0 ? 'price-up' : 'price-down';
+            const changeSymbol = change > 0 ? '↑' : '↓';
+            changeEl.innerHTML = `<span class="${changeClass}">${changeSymbol} Rs. ${Math.abs(change).toLocaleString()} (${Math.abs(changePercent)}%)</span>`;
+        }
+        
+        function plotBook(book) {
+            const data = traces[book];
+            
+            const trace = {
+                x: data.x,
+                y: data.y,
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: {
+                    color: '#667eea',
+                    width: 3,
+                    shape: 'spline'
+                },
+                marker: {
+                    color: '#667eea',
+                    size: 8,
+                    line: {
+                        color: 'white',
+                        width: 2
+                    }
+                },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(102, 126, 234, 0.1)',
+                hovertemplate: '<b>%{x}</b><br>Price: Rs. %{y:,.0f}<extra></extra>'
+            };
+            
+            const layout = {
+                title: {
+                    text: book,
+                    font: {
+                        size: 18,
+                        color: '#212529',
+                        family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                    }
+                },
+                xaxis: {
+                    title: 'Date',
+                    tickformat: '%b %d, %Y',
+                    gridcolor: '#e9ecef',
+                    showgrid: true
+                },
+                yaxis: {
+                    title: 'Price (Rs.)',
+                    tickformat: ',.0f',
+                    gridcolor: '#e9ecef',
+                    showgrid: true
+                },
+                plot_bgcolor: '#ffffff',
+                paper_bgcolor: '#ffffff',
+                hovermode: 'x unified',
+                margin: {t: 80, b: 60, l: 80, r: 40},
+                font: {
+                    family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    color: '#212529'
+                }
+            };
+            
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                displaylogo: false,
+                modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+            };
+            
+            Plotly.react(chartDiv, [trace], layout, config);
+            updateStats(book);
+        }
+        
+        // Initial plot
         plotBook(select.value);
-    });
-
-  </script>
+        
+        // Update on selection
+        select.addEventListener('change', () => {
+            plotBook(select.value);
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            Plotly.Plots.resize(chartDiv);
+        });
+    </script>
 </body>
 </html>
