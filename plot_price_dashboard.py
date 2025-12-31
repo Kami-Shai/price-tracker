@@ -38,9 +38,42 @@ buttons = []
 for i, book in enumerate(books):
     visibility = [False] * len(books)
     visibility[i] = True
-    buttons.append(
-        dict(
-            label=book,
-            method="update",
-            args=[{"visible": visibility},
-                  {"title": f"Price History: {book}"}]
+    buttons.append(dict(
+        label=book,
+        method="update",
+        args=[{"visible": visibility},
+              {"title": f"Price History: {book}"}]
+    ))
+
+# Update layout for mobile-friendly dropdown
+fig.update_layout(
+    updatemenus=[dict(
+        active=0,
+        buttons=buttons,
+        x=0,
+        y=1.05,               # inside container, above chart
+        xanchor="left",
+        yanchor="bottom",
+        direction="down",      # dropdown opens downward
+        showactive=True
+    )],
+    margin=dict(t=140, b=80, l=80, r=80),
+    title=f"Price History: {books[0]}",
+    xaxis=dict(tickformat="%b\n%Y"),
+    yaxis=dict(title="Price (Rs.)"),
+    hovermode="closest",
+    template="plotly_white",
+    width=900,
+    height=700
+)
+
+# Save as responsive HTML
+fig.write_html(
+    dashboard_file,
+    include_plotlyjs='cdn',
+    full_html=True,
+    auto_open=False,
+    config=dict(responsive=True)
+)
+
+print(f"✅ Mobile-friendly dashboard saved: {dashboard_file}")
