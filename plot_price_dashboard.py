@@ -1,30 +1,31 @@
 import pandas as pd
-import plotly.graph_objects as go
 import os
+import json
 
+# ----------------- CONFIG -----------------
 file_name = "price_history.csv"
 output_folder = "charts"
 dashboard_file = os.path.join(output_folder, "price_dashboard.html")
 
 os.makedirs(output_folder, exist_ok=True)
 
-# Load CSV
+# ----------------- LOAD DATA -----------------
 df = pd.read_csv(file_name)
 df["date"] = pd.to_datetime(df["date"])
 df["price"] = df["price"].str.replace("Rs.", "").str.replace(",", "").astype(float)
 
 books = df["book"].unique()
 
-# Create traces dictionary
+# ----------------- PREPARE DATA FOR JS -----------------
 traces_dict = {}
 for book in books:
     df_book = df[df["book"] == book].sort_values("date")
     traces_dict[book] = {
-        "x": df_book["date"].tolist(),
-        "y": df_book["price"].tolist()
+        "x": json.dumps(df_book["date"].dt.strftime("%Y-%m-%d").tolist()),  # convert dates to strings
+        "y": json.dumps(df_book["price"].tolist())
     }
 
-# Generate HTML
+# ----------------- GENERATE HTML -----------------
 html_lines = [
     "<!DOCTYPE html>",
     "<html lang='en'>",
@@ -52,7 +53,7 @@ html_lines.extend([
     "    const traces = {"
 ])
 
-# Add traces dictionary to JS
+# Add JS traces
 for book in books:
     html_lines.append(f"      '{book}': {{ x: {traces_dict[book]['x']}, y: {traces_dict[book]['y']} }},")
 html_lines.append("    };")
@@ -70,7 +71,7 @@ html_lines.extend([
             type: 'scatter',
             mode: 'lines+markers',
             marker: {color: '#1f77b4'},
-            hovertemplate: '%{x|%b %d, %Y}<br>Price: Rs.%{y}<extra></extra>'
+            hovertemplate: '%{x}<br>Price: Rs.%{y}<extra></extra>'
         }];
         const layout = {
             title: `Price History: ${book}`,
@@ -104,4 +105,4 @@ html_lines.extend([
 with open(dashboard_file, "w", encoding="utf-8") as f:
     f.write("\n".join(html_lines))
 
-print(f"✅ Mobile-friendly dashboard saved: {dashboard_file}")
+print(f"✅ Mobile and desktop-friendly dashboard saved: {dashboard_file}")
