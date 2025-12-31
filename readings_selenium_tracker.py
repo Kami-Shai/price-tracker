@@ -8,6 +8,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from datetime import datetime
 import pandas as pd
 import os
+import time
 
 # ----------------- CONFIG -----------------
 books = {
@@ -21,7 +22,7 @@ books = {
     "Lucifer Omnibus Vol. 1 (The Sandman Universe Classics)": "https://www.readings.com.pk/book/1759230",
     "Lucifer Omnibus Vol. 2 (The Sandman Universe Classics)": "https://www.readings.com.pk/book/1758950",
     "The Planetary Omnibus": "https://www.readings.com.pk/book/1441716",
-    "Death: The Deluxe Edition (2022022 Edition)": "https://www.readings.com.pk/book/1548649",
+    "Death: The Deluxe Edition (2022 Edition)": "https://www.readings.com.pk/book/1548649",
     "Batman By Paul Dini Omnibus (New Edition)": "https://www.readings.com.pk/book/1758841",
     "Absolute Superman For All Seasons": "https://www.readings.com.pk/book/1758926",
     "Gotham Central Omnibus (2022 Edition)": "https://www.readings.com.pk/book/1758872",
@@ -47,7 +48,7 @@ books = {
     "Absolute Justice League: The World’S Greatest Super‑Heroes By Alex Ross & Paul Dini (New Edition)": "https://www.readings.com.pk/book/1759085",
     "Absolute DC: The New Frontier (2025 Edition)": "https://www.readings.com.pk/book/1890113",
     "Superman By Kurt Busiek Book One": "https://www.readings.com.pk/book/1758974",
-    "Superman By Kurt Busiek Book Two": "https://www/readings.com.pk/book/1890061",
+    "Superman By Kurt Busiek Book Two": "https://www.readings.com.pk/book/1890061",
     "Superman: Birthright The Deluxe Edition (Volume 1)": "https://www.readings.com.pk/book/1591552",
     "Vision: The Complete Collection": "https://www.readings.com.pk/book/1754915",
     "Spider‑Man By Chip Zdarsky Omnibus": "https://www.readings.com.pk/book/1754067",
@@ -73,16 +74,25 @@ driver = webdriver.Chrome(
 
 rows = []
 
-# ----------------- SCRAPE PRICES -----------------
+# ----------------- SCRAPE PRICES WITH RETRY -----------------
+MAX_RETRIES = 3
+RETRY_DELAY = 5  # seconds
+
 for name, url in books.items():
-    driver.get(url)
-    try:
-        price_elem = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "span.sale-price"))
-        )
-        price = price_elem.text.strip().replace("\n", "")
-    except:
-        price = "Not found"
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            driver.get(url)
+            price_elem = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "span.sale-price"))
+            )
+            price = price_elem.text.strip().replace("\n", "")
+            break  # success, exit retry loop
+        except Exception as e:
+            print(f"❌ Attempt {attempt} failed for {name}: {e}")
+            price = "Not found"
+            if attempt < MAX_RETRIES:
+                print(f"🔄 Retrying in {RETRY_DELAY} seconds...")
+                time.sleep(RETRY_DELAY)
 
     rows.append({
         "date": datetime.now().strftime("%Y-%m-%d %H:%M"),
