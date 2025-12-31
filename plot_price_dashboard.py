@@ -17,8 +17,14 @@ df["date"] = pd.to_datetime(df["date"])
 def clean_price(price_str):
     if pd.isna(price_str) or price_str == "Not found":
         return None
-    # Remove Rs., PKR, commas, and extra spaces
-    cleaned = re.sub(r'[^\d.]', '', str(price_str))
+    # Remove Rs., PKR, and keep only digits and commas
+    # First remove currency symbols and extra text
+    cleaned = str(price_str).replace('Rs.', '').replace('PKR', '').replace('Rs', '')
+    # Remove any spaces
+    cleaned = cleaned.replace(' ', '')
+    # Remove commas (thousands separator)
+    cleaned = cleaned.replace(',', '')
+    # Now we should have just the number
     try:
         return float(cleaned)
     except:
