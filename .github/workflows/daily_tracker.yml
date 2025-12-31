@@ -29,8 +29,8 @@ jobs:
       - name: Run price tracker
         run: python readings_selenium_tracker_parallel.py
 
-      - name: Generate charts
-        run: python plot_all_prices.py
+      - name: Generate interactive charts
+        run: python plot_all_prices_interactive.py
 
       - name: Commit and push updates
         uses: EndBug/add-and-commit@v9
