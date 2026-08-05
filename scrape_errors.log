@@ -2393,3 +2393,24 @@ Stacktrace:
 #16 0x7f4f4b89caa4 <unknown>
 #17 0x7f4f4b929c6c <unknown>
 
+2026-08-05 11:50 | Spider-Man By Chip Zdarsky Omnibus | Message: 
+Stacktrace:
+#0 0x55d28ac6375a <unknown>
+#1 0x55d28a5d6fc9 <unknown>
+#2 0x55d28a62c8a2 <unknown>
+#3 0x55d28a62caf1 <unknown>
+#4 0x55d28a677fb4 <unknown>
+#5 0x55d28a6751a3 <unknown>
+#6 0x55d28a61fd32 <unknown>
+#7 0x55d28a620bb1 <unknown>
+#8 0x55d28ac28ae0 <unknown>
+#9 0x55d28ac2715a <unknown>
+#10 0x55d28ac11b85 <unknown>
+#11 0x55d28ac27e1a <unknown>
+#12 0x55d28abf9a80 <unknown>
+#13 0x55d28ac4f138 <unknown>
+#14 0x55d28ac4f2d5 <unknown>
+#15 0x55d28ac6230e <unknown>
+#16 0x7f8f2be9caa4 <unknown>
+#17 0x7f8f2bf29c6c <unknown>
+
