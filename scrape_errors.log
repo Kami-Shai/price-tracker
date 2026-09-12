@@ -3338,3 +3338,45 @@ Stacktrace:
 #16 0x7f2336a9cb84 <unknown>
 #17 0x7f2336b29d6c <unknown>
 
+2026-09-12 13:13 | Wolverine By Jason Aaron Omnibus Vol. 1 David Finch Cover [New Printing] | Message: 
+Stacktrace:
+#0 0x55de6d45e87a <unknown>
+#1 0x55de6cd90b99 <unknown>
+#2 0x55de6cde73dc <unknown>
+#3 0x55de6cde7651 <unknown>
+#4 0x55de6ce33c34 <unknown>
+#5 0x55de6ce30eaf <unknown>
+#6 0x55de6cdda17b <unknown>
+#7 0x55de6cddaf61 <unknown>
+#8 0x55de6d421247 <unknown>
+#9 0x55de6d41fa75 <unknown>
+#10 0x55de6d40ab35 <unknown>
+#11 0x55de6d4206ca <unknown>
+#12 0x55de6d3f3219 <unknown>
+#13 0x55de6d448698 <unknown>
+#14 0x55de6d448835 <unknown>
+#15 0x55de6d45d1c3 <unknown>
+#16 0x7f908129cb84 <unknown>
+#17 0x7f9081329d6c <unknown>
+
+2026-09-12 13:13 | Spider-Man By Chip Zdarsky Omnibus | Message: 
+Stacktrace:
+#0 0x55de6d45e87a <unknown>
+#1 0x55de6cd90b99 <unknown>
+#2 0x55de6cde73dc <unknown>
+#3 0x55de6cde7651 <unknown>
+#4 0x55de6ce33c34 <unknown>
+#5 0x55de6ce30eaf <unknown>
+#6 0x55de6cdda17b <unknown>
+#7 0x55de6cddaf61 <unknown>
+#8 0x55de6d421247 <unknown>
+#9 0x55de6d41fa75 <unknown>
+#10 0x55de6d40ab35 <unknown>
+#11 0x55de6d4206ca <unknown>
+#12 0x55de6d3f3219 <unknown>
+#13 0x55de6d448698 <unknown>
+#14 0x55de6d448835 <unknown>
+#15 0x55de6d45d1c3 <unknown>
+#16 0x7f908129cb84 <unknown>
+#17 0x7f9081329d6c <unknown>
+
